@@ -8,12 +8,13 @@ class NewWindow(tk.Toplevel):
         self.geometry("500x600")
         self.bidding = {"Snake": 100, "Bottle": 50}
         self.selling = {}
+        self.higher = {}
 
         self.new_window_widgets()
     
 
     def new_window_widgets(self):
-        self.bid_button = tk.Button(self, text="Bid", width=10, command = lambda: (self.bid_action(), self.bidding_window()))
+        self.bid_button = tk.Button(self, text="Bid", width=10, command = self.bid_action)
         self.bid_button.place(x=10, y=10)
 
         sell_button = tk.Button(self, text="Sell", width=10, command=self.selling_window)
@@ -75,23 +76,31 @@ class NewWindow(tk.Toplevel):
         index = self.listbox.curselection()
         if index:
             selected_item = self.listbox.get(index)
-            print(f"Bidding action for: {selected_item}")
-            
-    def bidding_window(self):
+            item_name = selected_item.split(" ---- ")[0]
+            self.bidding_window_lambda = lambda item=item_name: self.bidding_window(item)
+            self.bidding_window_lambda()
+
+    def bidding_window(self, item_name):
         new_window = tk.Toplevel(self)
-        new_window.title("BIDDING")
+        new_window.title("BIDDING") 
         new_window.geometry("450x100")
 
-        item_price_text = tk.Label(new_window, text="Price: ")
+        item_price_text = tk.Label(new_window, text=f"Bid Price for {item_name}:")
         item_price_text.pack()
         item_price = tk.Entry(new_window)
         item_price.pack()
 
         def bidding_closing_window():
-            pass
+            entered_price = float(item_price.get())
+            if entered_price > self.bidding[item_name]:
+                print("Bid accepted!") #sample lang
+                new_window.destroy()
+            else:
+                error_label = tk.Label(new_window, text="Bid price should be higher than the item price.")
+                error_label.pack()
             
-        bid_closing_window = tk.Button(new_window, text="Accept")
-        bid_closing_window.place(x=200, y=50)
+        bid_closing_window = tk.Button(new_window, text="Accept", command=bidding_closing_window)
+        bid_closing_window.place(x=200, y=60)
 
 
     
