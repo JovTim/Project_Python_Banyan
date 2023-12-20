@@ -42,7 +42,7 @@ class ServerApp:
         countdown_time = int(self.timer_entry.get())
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 54136)) #LAGAY MO YUNG PORT AND IP MO. DAPAT SAME SIYA SA CLIENT
+        s.connect(('IP', port)) #LAGAY MO YUNG PORT AND IP MO. DAPAT SAME SIYA SA CLIENT
 
         data = pickle.dumps(countdown_time)
         s.sendall(data)

@@ -91,7 +91,7 @@ class NewWindow(tk.Toplevel):
 
     def receive_countdown_time(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(('127.0.0.1', 54136))
+        server.bind(('IP', port)) #LAGAY MO YUNG PORT AND IP MO. DAPAT SAME SIYA SA CLIENT
         server.listen(1)
 
         while True:
