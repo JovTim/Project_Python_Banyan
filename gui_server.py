@@ -1,4 +1,7 @@
 import tkinter as tk
+import socket
+import pickle
+
 
 class ServerApp:
     def __init__(self, root):
@@ -35,10 +38,19 @@ class ServerApp:
         #for item in food_items:
         #    self.listbox.insert(tk.END, item)
 
-    def start_button(self): #start the bidding
-        pass
+    def start_button(self):
+        countdown_time = int(self.timer_entry.get())
 
-    def close_button(self): #close the program
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('IP', port)) #LAGAY MO YUNG PORT AND IP MO. DAPAT SAME SIYA SA CLIENT
+
+        data = pickle.dumps(countdown_time)
+        s.sendall(data)
+
+        s.close()
+
+    
+    def close_button(self):
         self.root.destroy()
     
     

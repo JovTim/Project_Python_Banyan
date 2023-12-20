@@ -1,4 +1,8 @@
 import tkinter as tk
+import socket
+import pickle
+import threading
+import time
 
 class NewWindow(tk.Toplevel):
     def __init__(self, master, text):
@@ -10,7 +14,11 @@ class NewWindow(tk.Toplevel):
         self.selling = {}
         self.higher = {}
 
+        self.countdown_var = tk.StringVar()
         self.new_window_widgets()
+
+        receive_thread = threading.Thread(target=self.receive_countdown_time)
+        receive_thread.start()
     
 
     def new_window_widgets(self):
@@ -22,6 +30,11 @@ class NewWindow(tk.Toplevel):
 
         bidding_label = tk.Label(self, text="Item for BIDDING", height=9)
         bidding_label.pack()
+
+        countdown_text = tk.Label(self, text="Countdown: ")
+        countdown_text.place(x=320, y=10)
+        countdown_label = tk.Label(self, textvariable=self.countdown_var)
+        countdown_label.place(x=400, y=10)
         self.listbox = tk.Listbox(
             self,
             height=6,
@@ -71,7 +84,27 @@ class NewWindow(tk.Toplevel):
         self.listbox2.delete(0, tk.END)
         for key, value in self.selling.items():
             self.listbox2.insert(tk.END, f"{key} ---- Php {value}")
-    
+#-----------------------------------------  
+    def start_countdown(self, countdown_time):
+        for i in range(countdown_time, -1, -1):
+            self.countdown_var.set(i)
+            self.update()
+            time.sleep(1)
+
+    def receive_countdown_time(self):
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind(('IP', port))#LAGAY MO YUNG PORT AND IP MO. DAPAT SAME SIYA SA CLIENT
+        server.listen(1)
+
+        while True:
+            conn, addr = server.accept()
+            data = conn.recv(4096)
+            countdown_time = pickle.loads(data)
+            conn.close()
+
+            start_countdown_thread = threading.Thread(target=self.start_countdown, args=(countdown_time,))
+            start_countdown_thread.start()
+#-------------------------------------------  
     def bid_action(self):
         index = self.listbox.curselection()
         if index:
