@@ -15,18 +15,19 @@ class NewWindow(tk.Toplevel):
         self.higher = {}
 
         self.countdown_var = tk.StringVar()
+        self.countdown_time = 0
+        self.timer_started = False
         self.new_window_widgets()
 
         receive_thread = threading.Thread(target=self.receive_countdown_time)
         receive_thread.start()
-    
 
     def new_window_widgets(self):
-        self.bid_button = tk.Button(self, text="Bid", width=10, command = self.bid_action)
+        self.bid_button = tk.Button(self, text="Bid", state='disabled', width=10, command=self.bid_action)
         self.bid_button.place(x=10, y=10)
 
-        sell_button = tk.Button(self, text="Sell", width=10, command=self.selling_window)
-        sell_button.place(x=100, y=10)
+        self.sell_button = tk.Button(self, text="Sell", state='disabled', width=10, command=self.selling_window)
+        self.sell_button.place(x=100, y=10)
 
         bidding_label = tk.Label(self, text="Item for BIDDING", height=9)
         bidding_label.pack()
@@ -35,6 +36,7 @@ class NewWindow(tk.Toplevel):
         countdown_text.place(x=320, y=10)
         countdown_label = tk.Label(self, textvariable=self.countdown_var)
         countdown_label.place(x=400, y=10)
+
         self.listbox = tk.Listbox(
             self,
             height=6,
@@ -51,6 +53,7 @@ class NewWindow(tk.Toplevel):
 
         selling_label = tk.Label(self, text="Item you are SELLING")
         selling_label.place(x=190, y=220)
+
         self.listbox2 = tk.Listbox(
             self,
             height=6,
@@ -62,12 +65,9 @@ class NewWindow(tk.Toplevel):
         )
         self.listbox2.place(x=10, y=240, width=480)
 
-        self.update_listbox2()
-
-
-
         highest_label = tk.Label(self, text="HIGHEST bidder")
         highest_label.place(x=190, y=390)
+
         self.listbox3 = tk.Listbox(
             self,
             height=6,
@@ -79,21 +79,19 @@ class NewWindow(tk.Toplevel):
         )
         self.listbox3.place(x=10, y=410, width=480)
     
-    
     def update_listbox2(self):
         self.listbox2.delete(0, tk.END)
         for key, value in self.selling.items():
             self.listbox2.insert(tk.END, f"{key} ---- Php {value}")
-#-----------------------------------------  
+
     def start_countdown(self, countdown_time):
-        for i in range(countdown_time, -1, -1):
-            self.countdown_var.set(i)
-            self.update()
-            time.sleep(1)
+        self.countdown_time = countdown_time
+        self.timer_started = True
+        self.update_ui()
 
     def receive_countdown_time(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(('IP', port))#LAGAY MO YUNG PORT AND IP MO. DAPAT SAME SIYA SA CLIENT
+        server.bind(('127.0.0.1', 54136))
         server.listen(1)
 
         while True:
@@ -102,8 +100,24 @@ class NewWindow(tk.Toplevel):
             countdown_time = pickle.loads(data)
             conn.close()
 
-            start_countdown_thread = threading.Thread(target=self.start_countdown, args=(countdown_time,))
-            start_countdown_thread.start()
+            self.start_countdown(countdown_time)
+
+    def update_ui(self):
+        if self.timer_started and self.countdown_time >= 0:  # Ensuring countdown stops at 0
+            self.bid_button.config(state='normal')
+            self.sell_button.config(state='normal')
+            if self.countdown_time > 0:  # Decrement countdown when greater than 0
+                self.countdown_time -= 1
+            self.countdown_var.set(self.countdown_time)
+            self.after(1000, self.update_ui)  # Update every 1 second
+
+            if self.countdown_time == 0:  # Disable buttons when countdown reaches 0
+                self.timer_started = False
+                self.bid_button.config(state='disabled')
+                self.sell_button.config(state='disabled')
+        else:
+            self.bid_button.config(state='disabled')
+            self.sell_button.config(state='disabled')
 #-------------------------------------------  
     def bid_action(self):
         index = self.listbox.curselection()
@@ -172,13 +186,11 @@ class ClientApp:
         self.root = root
         self.root.title("ENTER YOUR NAME")
         self.root.geometry("400x150")
-
         self.create_widgets()
 
     def create_widgets(self):
         self.name_entry = tk.Entry(self.root, width=45)
         self.name_entry.place(x=10, y=30)
-
         submit_button = tk.Button(self.root, text="Accept", command=self.on_submit, width=10)
         submit_button.place(x=300, y=30)
 
@@ -188,7 +200,7 @@ class ClientApp:
             self.root.withdraw()
             new_window = NewWindow(self.root, input_text)
             new_window.protocol("WM_DELETE_WINDOW", self.on_new_window_close)
-    
+
     def on_new_window_close(self):
         self.root.destroy()
 
